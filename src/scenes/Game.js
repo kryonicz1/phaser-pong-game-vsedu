@@ -4,40 +4,29 @@ const HEIGHT = 768;
 class Game extends Phaser.Scene {
     constructor() {
         super('Game');
-        // Initialise necessary variables
         this.ball = null;
+        this.cursors = null;
         this.leftPaddle = null;
         this.rightPaddle = null;
-
         this.wasd = null;
-        this.cursors = null;
-
-        // Flag to determine if the ball is in motion
-        this.ballInMotion = false;
-
-        // Points logic
         this.leftScore = 0;
         this.rightScore = 0;
-        this.leftScoreText = null;
-        this.rightScoreText = null;
+        this.ballInMotion = false;
     }
 
     preload() {
-        // Load necessary assets from the assets directory
-        this.load.image('background', 'public/assets/background.png');
-        this.load.image('ball', 'public/assets/ball.png');
-        this.load.image('paddle', 'public/assets/paddle.png');
+        this.load.setPath('public/assets');
+        this.load.image('background', 'background.png');
+        this.load.image('ball', 'ball.png');
+        this.load.image('paddle', 'paddle.png');
     }
 
     create() {
-        // Add background and ball to the scene
-        this.add.image(WIDTH / 2, HEIGHT / 2, 'background').setScale(0.8, 0.8);
-
-        this.ball = this.physics.add.image(WIDTH / 2, HEIGHT / 2, 'ball').setScale(0.05, 0.05).refreshBody();
+        this.add.image(WIDTH/2, HEIGHT/2, 'background').setScale(0.8, 0.8);
+        this.ball = this.physics.add.image(WIDTH/2, HEIGHT/2, 'ball').setScale(0.05, 0.05).refreshBody();
         this.ball.setCollideWorldBounds(true);
         this.ball.setBounce(1, 1);
 
-        // Set up paddles with collision with ball
         this.leftPaddle = this.physics.add.image(50, 384, "paddle");
         this.leftPaddle.setImmovable(true);
 
@@ -47,63 +36,60 @@ class Game extends Phaser.Scene {
         this.physics.add.collider(this.ball, this.leftPaddle, this.hitPaddle, null, this);
         this.physics.add.collider(this.ball, this.rightPaddle, this.hitPaddle, null, this);
 
-        // Listen for "keyspace down" event, calling startBall function upon press
-        this.input.keyboard.on('keydown-SPACE', this.startBall, this);
+        this.leftScoreText = this.add.text(100, 50, '0', { fontSize: '50px', fontFamily: 'Courier New', fill: '#fff' });
+        this.rightScoreText = this.add.text(924, 50, '0', { fontSize: '50px', fontFamily: 'Courier New', fill: '#fff' });
 
-        // Assigns U/D/L/R keys to the cursors variable
         this.cursors = this.input.keyboard.createCursorKeys();
-        // Assigns W/S keys to the wasd variable
-        this.wasd = this.input.keyboard.addKeys({
-            up: Phaser.Input.Keyboard.KeyCodes.W,
-            down: Phaser.Input.Keyboard.KeyCodes.S
+        this.wasd = this.input.keyboard.addKeys({ 
+            up: Phaser.Input.Keyboard.KeyCodes.W, 
+            down: Phaser.Input.Keyboard.KeyCodes.S 
         });
 
-        this.leftScoreText = this.add.text(100, 50, '0', { fontSize: '50px' });
-        this.rightScoreText = this.add.text(924, 50, '0', { fontSize: '50px' });
+        this.input.keyboard.on('keydown-SPACE', this.startBall, this);
     }
 
     update() {
-        // leftPaddle movement logic
-        if (this.wasd.up.isDown && this.leftPaddle.y > 0) {
+        if (this.wasd.up.isDown && this.leftPaddle.y > this.leftPaddle.height / 2) {
             this.leftPaddle.y -= 5;
-        } else if (this.wasd.down.isDown && this.leftPaddle.y < HEIGHT) {
+        } else if (this.wasd.down.isDown && this.leftPaddle.y < 768 - this.leftPaddle.height / 2) {
             this.leftPaddle.y += 5;
         }
 
-        // rightPaddle movement logic
-        if (this.cursors.up.isDown && this.rightPaddle.y > 0) {
+        if (this.cursors.up.isDown && this.rightPaddle.y > this.rightPaddle.height / 2) {
             this.rightPaddle.y -= 5;
-        } else if (this.cursors.down.isDown && this.rightPaddle.y < HEIGHT) {
+        } else if (this.cursors.down.isDown && this.rightPaddle.y < 768 - this.rightPaddle.height / 2) {
             this.rightPaddle.y += 5;
         }
 
-        // Fail condition check
         const margin = 30;
-        if (this.ball.x < margin) { // ball hits left wall
+        if (this.ball.x < margin) {
             this.rightScore += 1;
             this.rightScoreText.setText(this.rightScore);
             this.resetBall();
-        } else if (this.ball.x > WIDTH - margin) { // ball hits right wall
+        } else if (this.ball.x > WIDTH - margin) {
             this.leftScore += 1;
             this.leftScoreText.setText(this.leftScore);
             this.resetBall();
         }
+
+        this.leftPaddle.body.updateFromGameObject();
+        this.rightPaddle.body.updateFromGameObject();
     }
 
     startBall() {
-        if (!this.ballInMotion) { // checks flag to determine if ball is NOT in motion
-            let initialVelocityX = 300 * (Phaser.Math.Between(0, 1) ? 1 : -1); // sets to either 300 or -300
-            let initialVelocityY = 300 * (Phaser.Math.Between(0, 1) ? 1 : -1); // sets to either 300 or -300
-            this.ball.setVelocity(initialVelocityX, initialVelocityY); // sets ball to RANDOM velocity
-            this.ballInMotion = true; // sets flag to ball is in motion
+        if (!this.ballInMotion) {
+            let initialVelocityX = 300 * (Phaser.Math.Between(0, 1) ? 1 : -1);
+            let initialVelocityY = 300 * (Phaser.Math.Between(0, 1) ? 1 : -1);
+            this.ball.setVelocity(initialVelocityX, initialVelocityY);
+            this.ballInMotion = true;
         }
     }
 
     resetBall() {
-        this.ball.setPosition(WIDTH / 2, 384);
+        this.ball.setPosition(WIDTH/2, 384);
         this.ball.setVelocity(0, 0);
         this.ballInMotion = false;
-        this.startBall()
+        this.time.delayedCall(1000, this.startBall, [], this);
     }
 
     hitPaddle(ball, paddle) {
@@ -111,10 +97,9 @@ class Game extends Phaser.Scene {
         let newVelocityX = ball.body.velocity.x * velocityFactor;
         let newVelocityY = ball.body.velocity.y * velocityFactor;
 
-        let angleDeviationInDeg = Phaser.Math.Between(-30, 30);
-        let angleDeviationInRad = Phaser.Math.DegToRad(angleDeviationInDeg)
-        let newVelocity = new Phaser.Math.Vector2(newVelocityX, newVelocityY).rotate(angleDeviationInRad);
+        let angleDeviation = Phaser.Math.Between(Math.PI / 20, Math.PI / 20);
+        let newVelocity = new Phaser.Math.Vector2(newVelocityX, newVelocityY).rotate(angleDeviation);
+
         ball.setVelocity(newVelocity.x, newVelocity.y);
     }
-
 }
