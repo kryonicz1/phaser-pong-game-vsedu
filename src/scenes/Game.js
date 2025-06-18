@@ -12,9 +12,9 @@ class Game extends Phaser.Scene {
 
     preload() {
         // Load necessary assets from the assets directory
-        this.load.image('background', 'assets/background.png');
-        this.load.image('ball', 'assets/ball.png');
-        this.load.image('paddle', 'assets/paddle.png');
+        this.load.image('background', 'public/assets/background.png');
+        this.load.image('ball', 'public/assets/ball.png');
+        this.load.image('paddle', 'public/assets/paddle.png');
     }
 
     create() {
